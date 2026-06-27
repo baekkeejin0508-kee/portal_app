@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>에듀앱 포털</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Mesh gradient background */
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,0.05) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.05) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,0.05) 0, transparent 50%);
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* App Icon Animation */
+        .app-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .app-card:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Category Tab Animation */
+        .cat-tab { transition: all 0.2s; }
+        .cat-tab.active {
+            background-color: #4F46E5; /* Indigo 600 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col">
+
+    <!-- Header -->
+    <header class="glass sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                E
+            </div>
+            <h1 class="text-2xl font-black tracking-tight text-slate-800">에듀앱 포털</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Search -->
+            <div class="relative hidden sm:block">
+                <input type="text" id="searchInput" placeholder="앱 검색..." class="pl-10 pr-4 py-2 rounded-full bg-white/50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm w-48 focus:w-64">
+                <svg class="w-4 h-4 absolute left-3.5 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <!-- Admin Lock Icon -->
+            <button onclick="promptAdmin()" class="text-slate-400 hover:text-indigo-600 transition-colors p-2" title="관리자 모드">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Categories -->
+    <nav class="w-full px-6 py-4 overflow-x-auto whitespace-nowrap scrollbar-hide border-b border-slate-200/50">
+        <div class="flex gap-2" id="categoryContainer">
+            <!-- Rendered by JS -->
+        </div>
+    </nav>
+
+    <!-- Main Grid -->
+    <main class="flex-grow p-6 sm:p-8 max-w-7xl mx-auto w-full">
+        <!-- Search bar for mobile -->
+        <div class="relative sm:hidden mb-6">
+            <input type="text" id="searchInputMobile" placeholder="앱 검색..." class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm">
+            <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+
+        <div id="appGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-8 justify-items-center">
+            <!-- App Cards Rendered by JS -->
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center py-20 opacity-60">
+            <svg class="w-16 h-16 text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <p class="text-slate-500 font-medium">등록된 앱이 없습니다.</p>
+        </div>
+    </main>
+
+    <!-- FAB (Floating Action Button) / Footer -->
+    <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        <!-- Add App Button (Admin Only) -->
+        <button id="addAppBtn" onclick="openAddModal()" class="hidden w-14 h-14 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg shadow-pink-500/40 flex items-center justify-center transition-transform hover:scale-110 active:scale-95" title="앱 추가">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        </button>
+        <!-- Download JSON Button -->
+        <button onclick="downloadData()" class="w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center transition-transform hover:scale-110 active:scale-95" title="전체본 다운로드">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        </button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200/60 bg-white/50 backdrop-blur-md py-6">
+        <div class="max-w-7xl mx-auto px-6 text-center text-sm text-slate-500 flex flex-col items-center gap-2">
+            <div class="flex gap-4 mb-1">
+                <button onclick="openPolicyModal('terms')" class="hover:text-indigo-600 font-medium transition-colors">이용약관</button>
+                <span class="text-slate-300">|</span>
+                <button onclick="openPolicyModal('privacy')" class="hover:text-indigo-600 font-bold transition-colors text-slate-700">개인정보처리방침</button>
+            </div>
+            <p>© 2026 에듀앱 포털. All rights reserved.</p>
+            <p class="text-xs text-slate-400">개인정보책임자: 백기진 교사 (서울의료보건고등학교) | 문의: 02-392-5553</p>
+        </div>
+    </footer>
+
+    <!-- 약관 및 방침 모달 -->
+    <div id="policy-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[250] hidden flex-col items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 flex flex-col max-h-[85vh]">
+            <h2 id="policy-title" class="text-2xl font-black mb-4 text-center text-slate-800"></h2>
+            
+            <div id="policy-content" class="overflow-y-auto flex-grow bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-inner text-sm text-slate-600 leading-relaxed text-left break-keep">
+            </div>
+            
+            <div class="mt-5 flex-shrink-0">
+                <button onclick="closePolicyModal()" class="w-full bg-slate-200 text-slate-700 py-3 rounded-xl font-bold active:scale-95 transition-transform text-base hover:bg-slate-300">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Add App Modal -->
+    <div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-4 transition-opacity opacity-0">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-indigo-600 p-6 text-white">
+                <h2 class="text-xl font-bold">새 웹앱 등록</h2>
+                <p class="text-indigo-200 text-sm mt-1">포털 런처에 새로운 앱을 추가합니다.</p>
+            </div>
+            
+            <div class="p-6 overflow-y-auto">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">제목</label>
+                        <input type="text" id="appTitle" placeholder="예: 보건앱" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">카테고리</label>
+                        <select id="appCategory" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">링크 (URL)</label>
+                        <input type="url" id="appUrl" placeholder="https://" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">썸네일 사진</label>
+                        <div class="flex items-center justify-center w-full">
+                            <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors relative overflow-hidden group">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6 text-slate-500" id="uploadPlaceholder">
+                                    <svg class="w-8 h-8 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <p class="text-sm"><span class="font-bold">클릭하여 업로드</span></p>
+                                </div>
+                                <img id="uploadPreview" class="absolute inset-0 w-full h-full object-cover hidden">
+                                <input id="appThumbnail" type="file" class="hidden" accept="image/*" />
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 bg-slate-50 border-t border-slate-200 flex gap-3">
+                <button onclick="closeAddModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 transition-colors">취소</button>
+                <button onclick="saveApp()" class="flex-[2] px-4 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/20 transition-transform active:scale-95">반영하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex-col items-center justify-center p-4 transition-opacity opacity-0">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">앱 삭제</h3>
+            <p class="text-slate-500 mb-6 text-sm">정말로 이 앱을 런처에서 삭제하시겠습니까?</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 hover:bg-slate-300">취소</button>
+                <button id="confirmDeleteBtn" class="flex-1 py-3 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 shadow-md">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        const CATEGORIES = ['전체앱', '국어', '수학', '영어', '보건', '체육', '창체', '기타'];
+        let activeCategory = '전체앱';
+        let apps = [];
+        let isAdmin = false;
+        let searchQuery = '';
+
+        // Default apps for preview if empty
+        const defaultApps = [
+            { id: 1, title: '보건앱', url: '../보건앱/index.html', category: '보건', thumbnail: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=300&q=80' },
+            { id: 2, title: '수학 연산 퀴즈', url: '#', category: '수학', thumbnail: 'https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?auto=format&fit=crop&w=300&q=80' },
+            { id: 3, title: '영어 단어장', url: '#', category: '영어', thumbnail: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=300&q=80' },
+            { id: 4, title: '체육 활동 기록', url: '#', category: '체육', thumbnail: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=300&q=80' }
+        ];
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadApps();
+            renderCategories();
+            renderApps();
+            setupSearch();
+            setupImageUpload();
+        });
+
+        function loadApps() {
+            const stored = localStorage.getItem('eduApps');
+            if(stored) {
+                apps = JSON.parse(stored);
+            } else {
+                apps = [...defaultApps];
+                saveToStorage();
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('eduApps', JSON.stringify(apps));
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryContainer');
+            const select = document.getElementById('appCategory');
+            
+            container.innerHTML = '';
+            select.innerHTML = '';
+
+            CATEGORIES.forEach(cat => {
+                // Nav Tab
+                const btn = document.createElement('button');
+                btn.className = `cat-tab px-5 py-2 rounded-full text-sm font-bold border border-slate-200 ${cat === activeCategory ? 'active' : 'bg-white text-slate-600 hover:bg-slate-50'}`;
+                btn.innerText = cat;
+                btn.onclick = () => {
+                    activeCategory = cat;
+                    renderCategories();
+                    renderApps();
+                };
+                container.appendChild(btn);
+
+                // Select Options (skip '전체앱')
+                if(cat !== '전체앱') {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.innerText = cat;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        function renderApps() {
+            const grid = document.getElementById('appGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            grid.innerHTML = '';
+            
+            let filtered = apps;
+            if(activeCategory !== '전체앱') {
+                filtered = filtered.filter(a => a.category === activeCategory);
+            }
+            if(searchQuery) {
+                filtered = filtered.filter(a => a.title.toLowerCase().includes(searchQuery.toLowerCase()));
+            }
+
+            if(filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+
+                filtered.forEach(app => {
+                    const el = document.createElement('div');
+                    el.className = 'flex flex-col items-center gap-2 group relative w-full max-w-[96px]';
+                    
+                    // Admin Delete Badge
+                    let deleteHtml = '';
+                    if(isAdmin) {
+                        deleteHtml = `
+                            <button onclick="promptDelete(${app.id}); event.stopPropagation();" class="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md scale-0 group-hover:scale-100 transition-transform z-10 hover:bg-red-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        `;
+                    }
+
+                    // Card
+                    el.innerHTML = `
+                        ${deleteHtml}
+                        <a href="${app.url}" target="_blank" class="block w-20 h-20 sm:w-24 sm:h-24 rounded-[22%] bg-white shadow-sm border border-slate-100 overflow-hidden app-card flex-shrink-0 cursor-pointer">
+                            <img src="${app.thumbnail}" alt="${app.title}" class="w-full h-full object-cover">
+                        </a>
+                        <p class="text-xs sm:text-sm font-semibold text-slate-700 text-center w-full truncate px-1">${app.title}</p>
+                    `;
+                    grid.appendChild(el);
+                });
+            }
+        }
+
+        // Search logic
+        function setupSearch() {
+            const desktopInput = document.getElementById('searchInput');
+            const mobileInput = document.getElementById('searchInputMobile');
+            
+            const handleSearch = (e) => {
+                searchQuery = e.target.value;
+                desktopInput.value = searchQuery;
+                mobileInput.value = searchQuery;
+                renderApps();
+            };
+
+            desktopInput.addEventListener('input', handleSearch);
+            mobileInput.addEventListener('input', handleSearch);
+        }
+
+        // Admin Auth
+        function promptAdmin() {
+            if(isAdmin) {
+                isAdmin = false;
+                document.getElementById('addAppBtn').classList.add('hidden');
+                alert("관리자 모드가 해제되었습니다.");
+                renderApps();
+                return;
+            }
+
+            const code = prompt("관리자 코드를 입력하세요. (기본: admin123)");
+            if(code === "admin123") {
+                isAdmin = true;
+                document.getElementById('addAppBtn').classList.remove('hidden');
+                alert("관리자 모드가 활성화되었습니다. 런처에 앱을 추가하거나 삭제할 수 있습니다.");
+                renderApps();
+            } else if(code !== null) {
+                alert("관리자 코드가 일치하지 않습니다.");
+            }
+        }
+
+        // Modals
+        let thumbnailBase64 = null;
+
+        function openAddModal() {
+            const modal = document.getElementById('addModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
+            
+            // Reset Form
+            document.getElementById('appTitle').value = '';
+            document.getElementById('appUrl').value = '';
+            document.getElementById('appCategory').value = CATEGORIES[1];
+            document.getElementById('uploadPreview').classList.add('hidden');
+            document.getElementById('uploadPreview').src = '';
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('appThumbnail').value = '';
+            thumbnailBase64 = null;
+        }
+
+        function closeAddModal() {
+            const modal = document.getElementById('addModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        // Image Upload
+        function setupImageUpload() {
+            const input = document.getElementById('appThumbnail');
+            const preview = document.getElementById('uploadPreview');
+            const placeholder = document.getElementById('uploadPlaceholder');
+
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        thumbnailBase64 = e.target.result;
+                        preview.src = thumbnailBase64;
+                        preview.classList.remove('hidden');
+                        placeholder.classList.add('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Save App
+        function saveApp() {
+            const title = document.getElementById('appTitle').value.trim();
+            const url = document.getElementById('appUrl').value.trim();
+            const category = document.getElementById('appCategory').value;
+
+            if(!title || !url || !thumbnailBase64) {
+                alert("제목, 링크, 썸네일 이미지를 모두 입력해주세요.");
+                return;
+            }
+
+            const newApp = {
+                id: Date.now(),
+                title, url, category, thumbnail: thumbnailBase64
+            };
+
+            apps.push(newApp);
+            saveToStorage();
+            renderApps();
+            closeAddModal();
+        }
+
+        // Delete App
+        let appToDelete = null;
+        function promptDelete(id) {
+            appToDelete = id;
+            const modal = document.getElementById('deleteModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); appToDelete = null; }, 300);
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+            if(appToDelete) {
+                apps = apps.filter(a => a.id !== appToDelete);
+                saveToStorage();
+                renderApps();
+                closeDeleteModal();
+            }
+        });
+
+        // Download JSON
+        function downloadData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(apps, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "edu_apps_backup.json");
+            dlAnchorElem.click();
+        }
+
+        const termsText = `
+<h2 class="text-xl font-bold mb-4 text-slate-800">서비스 이용약관</h2>
+<p class="mb-4">본 이용약관(이하 '약관')은 앱뜰(App-Tteul)(이하 '본 서비스')이 제공하는 교육용 웹 애플리케이션 서비스의 이용에 관한 사항을 규정합니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제1조 (목적)</h3>
+<p class="mb-4">이 약관은 본 서비스가 제공하는 무료 교육용 웹 애플리케이션 서비스(이하 '서비스')를 이용함에 있어 서비스 제공자와 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제2조 (정의)</h3>
+<p class="mb-4">- '서비스'란 본 플랫폼에서 제공하는 교육용 웹 애플리케이션을 말합니다.<br>
+- '이용자'란 본 서비스에 접속하여 이 약관에 따라 서비스를 이용하는 회원 및 비회원을 말합니다.<br>
+- '회원'이란 본 서비스에 회원등록을 한 자로서, 서비스를 이용할 수 있는 자를 말합니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제3조 (약관의 명시와 개정)</h3>
+<p class="mb-4">① 본 서비스는 이 약관의 내용을 이용자가 쉽게 알 수 있도록 서비스 초기 화면에 게시합니다.<br>
+② 본 서비스는 관련 법령을 위배하지 않는 범위에서 이 약관을 개정할 수 있습니다.<br>
+③ 약관을 개정할 경우에는 적용일자 및 개정사유를 명시하여 현행약관과 함께 서비스 내에 그 적용일자 7일 이전부터 공지합니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제4조 (서비스의 제공)</h3>
+<p class="mb-4">본 서비스는 교육 목적의 무료 웹 애플리케이션을 제공합니다.<br>
+서비스의 이용은 무료이며, 별도의 유료 결제가 필요하지 않습니다.<br>
+본 서비스는 교육 활동 지원을 목적으로 하며, 상업적 목적으로 운영되지 않습니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제5조 (서비스의 중단)</h3>
+<p class="mb-4">① 본 서비스는 시스템 점검, 교체 및 고장, 통신 두절 등의 사유가 발생한 경우에는 서비스의 제공을 일시적으로 중단할 수 있습니다.<br>
+② 본 서비스는 무료로 제공되는 교육용 서비스이므로, 서비스 중단으로 인한 별도의 보상은 제공되지 않습니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제6조 (회원가입)</h3>
+<p class="mb-4">① 이용자는 서비스가 정한 가입 양식에 따라 회원정보를 기입한 후 이 약관에 동의함으로써 회원가입을 신청합니다.<br>
+② 만 14세 미만의 아동은 학교 가정통신문 등을 통해 보호자(법정대리인)의 동의를 받은 후 서비스를 이용할 수 있습니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제7조 (회원 탈퇴)</h3>
+<p class="mb-4">회원은 본 서비스에 언제든지 탈퇴를 요청할 수 있으며, 서비스는 즉시 회원탈퇴를 처리합니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제8조 (이용자의 의무)</h3>
+<p class="mb-4">이용자는 다음 행위를 하여서는 안 됩니다.<br>
+- 허위 내용의 등록<br>
+- 타인의 정보 도용<br>
+- 서비스에 게시된 정보의 무단 변경<br>
+- 서비스의 운영을 방해하는 행위<br>
+- 타인의 명예를 손상시키거나 불이익을 주는 행위<br>
+- 공서양속에 반하는 정보를 게시하는 행위</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제9조 (저작권)</h3>
+<p class="mb-4">① 본 서비스가 작성한 저작물에 대한 저작권은 서비스 제공자에게 귀속합니다.<br>
+② 이용자는 서비스를 이용하여 얻은 정보를 서비스 제공자의 사전 승낙 없이 복제, 송신, 출판, 배포하여서는 안 됩니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제10조 (면책조항)</h3>
+<p class="mb-4">① 본 서비스는 무료로 제공되는 교육용 서비스로서, 서비스 이용 중 발생하는 기술적 문제나 오류에 대해 제한적 책임을 집니다.<br>
+② 본 서비스가 연결하는 외부 웹 애플리케이션의 내용에 대해서는 해당 애플리케이션 제공자가 책임을 집니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-1 mt-4 text-lg">제11조 (분쟁해결)</h3>
+<p class="mb-4">본 서비스와 이용자 간에 발생한 분쟁에 관하여는 대한민국 법을 적용하며, 소송이 제기되는 경우 서비스 제공자의 소재지를 관할하는 법원을 관할법원으로 합니다.</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-4 text-base">부칙</h4>
+<p class="mb-4">이 약관은 2026년 1월 28일부터 시행됩니다.</p>
+`;
+
+        const privacyText = `
+<h2 class="text-xl font-bold mb-4 text-slate-800">교사 개발 학습지원 소프트웨어 표준 개인정보처리방침</h2>
+<p class="mb-4">본 표준안은 서울시 소속 교사가 직접 개발하여 교육 활동에 활용하는 소프트웨어가 학습지원 소프트웨어 선정 기준(교육부)의 필수 요건을 충족하도록 돕기 위해 작성되었습니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-2 mt-4 text-lg">1. 웹사이트 게시 가이드 (필수 구현 사항)</h3>
+<p class="mb-2">학교운영위원회 심의 및 관련 법령 준수를 위해 다음과 같이 화면을 구성해야 합니다.<br>
+① 메인 화면 하단 (Footer)<br>
+위치: 웹사이트 또는 앱의 모든 페이지 최하단<br>
+필수 포함 내용:<br>
+- 개인정보처리방침 텍스트 링크 (클릭 시 전체 내용 팝업 또는 페이지 이동)<br>
+- 개발자(개인정보책임자)의 실명과 소속 학교, 연락처(교무실)<br>
+예시 화면: © 2026 [ingyu’s ai world]. All rights reserved. 이용약관 | 개인정보처리방침 개인정보책임자: 백인규 교사 (서울가동초등학교) | 문의: 02-448-5766</p>
+<p class="mb-4">② 회원가입 화면<br>
+위치: 아이디/비밀번호 생성 단계<br>
+필수 포함 내용: 개인정보 수집 동의 및 만 14세 미만 보호자 동의 확인<br>
+- [v] (필수) 개인정보 수집 및 이용에 동의합니다.<br>
+- [v] (필수) (만 14세 미만인 경우) 학교 가정통신문 등을 통해 보호자 동의를 완료하였습니다.</p>
+
+<h3 class="font-bold text-slate-800 mb-2 mt-4 text-lg">2. 표준 개인정보처리방침 (전문)</h3>
+<p class="mb-4">[ingyu’s ai world](이하 본 서비스)은(는) 개인정보 보호법 제30조에 따라 정보주체의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 하기 위하여 다음과 같이 개인정보 처리방침을 수립·공개합니다.</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-3 text-base">제1조 (개인정보의 처리 목적)</h4>
+<p class="mb-4">본 서비스는 다음의 목적을 위하여 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 개인정보 보호법 제18조에 따라 별도의 동의를 받는 등 필요한 조치를 이행할 예정입니다.<br>
+- 학생 회원 가입 및 관리: 학급 구성원 식별, 학습 진도율 확인, 교사의 피드백 제공<br>
+- 서비스 제공: 학습 콘텐츠 제공, 과제 제출 및 기록 저장, 학습 이력 관리</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-3 text-base">제2조 (개인정보의 처리 및 보유기간)</h4>
+<p class="mb-4">① 본 서비스는 법령에 따른 개인정보 보유·이용기간 또는 정보주체로부터 개인정보 수집 시에 동의받은 개인정보 보유·이용기간 내에서 개인정보를 처리·보유합니다.<br>
+② 각각의 개인정보 처리 및 보유 기간은 다음과 같습니다.<br>
+- 보유 기간: 해당 학년도 종료 시(익년 2월 말) 또는 학생의 졸업/진급 시까지<br>
+- 파기 시점: 보유 기간 종료 후 지체 없이(5일 이내) 파기</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-3 text-base">제3조 (처리하는 개인정보 항목)</h4>
+<p class="mb-4">본 서비스는 학습 지원을 위해 필요한 최소한의 개인정보만을 수집합니다.<br>
+- 수집 항목: 아이디, 비밀번호, 이름(또는 닉네임), 학년, 반, 번호<br>
+- 수집하지 않는 항목: 주민등록번호, 주소, 전화번호, 이메일 등 불필요한 민감 정보</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-3 text-base">제4조 (만 14세 미만 아동의 개인정보 처리에 관한 사항)</h4>
+<p class="mb-4">① 본 서비스는 만 14세 미만 아동의 개인정보를 처리하기 위하여 가입 단계 또는 학기 초 학교 가정통신문(개인정보 수집·이용 동의서)을 통하여 법정대리인의 동의를 받습니다.<br>
+② 법정대리인이 동의하지 않는 경우, 해당 아동은 서비스 가입 및 이용이 제한될 수 있습니다.</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-3 text-base">제5조 (개인정보의 파기 절차 및 방법)</h4>
+<p class="mb-4">① 개인정보 보유기간의 경과, 처리목적 달성 등 개인정보가 불필요하게 되었을 때에는 지체 없이 해당 개인정보 파기합니다.<br>
+② 파기 방법: 전자적 파일 형태로 기록·저장된 개인정보는 기록을 재생할 수 없도록 파기(DB 영구 삭제)하며, 종이 문서는 분쇄하거나 소각하여 파기합니다.</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-3 text-base">제6조 (개인정보의 안전성 확보조치)</h4>
+<p class="mb-4">본 서비스는 개인정보 보호법 제29조에 따라 다음과 같이 안전성 확보에 필요한 기술적/관리적 및 물리적 조치를 하고 있습니다.<br>
+- 비밀번호 암호화: 이용자의 비밀번호는 일방향 암호화(Hash) 되어 저장 및 관리되며, 개발자(관리자)도 알 수 없습니다.<br>
+- 해킹 등에 대비한 기술적 대책: 보안 인증을 획득한 전문 클라우드 플랫폼(예: Google Firebase / AWS / Azure / Vercel 등)을 기반으로 운영되며, 전 구간 보안 통신(HTTPS)을 사용하여 데이터를 암호화하여 전송합니다.<br>
+- 개인정보 취급 직원의 최소화: 개인정보를 처리하는 담당자를 개발 교사 1인으로 지정하여 접근 권한을 관리합니다.</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-3 text-base">제7조 (정보주체와 법정대리인의 권리·의무 및 행사방법)</h4>
+<p class="mb-4">① 정보주체(학생) 및 법정대리인은 언제든지 개인정보 열람·정정·삭제·처리정지 요구 등의 권리를 행사할 수 있습니다.<br>
+② 권리 행사는 서비스 내 [회원탈퇴] 기능을 통하여 즉시 가능하며, 또는 개발 교사에게 구두나 서면으로 요청하면 지체 없이 조치하겠습니다.</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-3 text-base">제8조 (개인정보 보호책임자)</h4>
+<p class="mb-4">본 서비스는 개인정보 처리에 관한 업무를 총괄해서 책임지고, 개인정보 처리와 관련한 정보주체의 불만처리 및 피해구제 등을 위하여 아래와 같이 개인정보 보호책임자를 지정하고 있습니다.<br>
+- 성명: 백기진 (개발자)<br>
+- 소속: 서울의료보건고등학교<br>
+- 직위: 교사<br>
+- 연락처: 02-392-5553 (학교 교무실 내선 번호) (※ 개인정보보호를 위해 교사의 개인 휴대전화 번호는 기재하지 않습니다.)</p>
+
+<h4 class="font-bold text-slate-800 mb-1 mt-3 text-base">제9조 (개인정보 처리방침 변경)</h4>
+<p class="mb-4">이 개인정보 처리방침은 2026년 3월 1일부터 적용됩니다.</p>
+`;
+
+        function openPolicyModal(type) {
+            const modal = document.getElementById('policy-modal');
+            const title = document.getElementById('policy-title');
+            const content = document.getElementById('policy-content');
+            
+            if(type === 'terms') {
+                title.innerText = '이용약관';
+                content.innerHTML = termsText;
+            } else {
+                title.innerText = '개인정보처리방침';
+                content.innerHTML = privacyText;
+            }
+            
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.style.opacity = '1'; }, 10);
+        }
+
+        function closePolicyModal() {
+            const modal = document.getElementById('policy-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => { 
+                modal.classList.add('hidden'); 
+                modal.style.display = 'none';
+            }, 300);
+        }
+    </script>
+</body>
+</html>
